@@ -8,7 +8,7 @@ using UnityEngine;
 public class LevelMNG : MonoBehaviour
 {
     public GameObject g_CubePrefab;
-    private Coroutine m_crSpawnWaitTime;
+    private Coroutine m_crSpawn;
 
     // Start is called before the first frame update
     void Start()
@@ -54,7 +54,7 @@ public class LevelMNG : MonoBehaviour
         for (int i = 0; i < Cube1stFloor; i++)
         {
             int x,y;
-            while(true)
+            while (true)
             {
                 x = UnityEngine.Random.Range(0, 4);
                 y = UnityEngine.Random.Range(0, 4);
@@ -84,30 +84,30 @@ public class LevelMNG : MonoBehaviour
     {
         GameObject Cube = g_CubePrefab;
         GameObject CubeSpawnField = GameObject.Find("CubeSpawnField");
-
-        for (int z = 0;z < CubePosArr.Length;z++)
+        IEnumerator SpawnCube()
         {
-            for (int y = 0; y<CubePosArr[z].Length;y++)
+            for (int z = 0; z < CubePosArr.Length; z++)
             {
-                for (int x = 0; x < CubePosArr[y].Length;x++)
+                for (int y = 0; y < CubePosArr[z].Length; y++)
                 {
-                    if (CubePosArr[x][y][z] == true)
+                    for (int x = 0; x < CubePosArr[y].Length; x++)
                     {
-                        m_crSpawnWaitTime = StartCoroutine(WaitFunc());
-                        Vector3 Pos = Cube.transform.localPosition;
-                        Pos.x = x; Pos.y = y; Pos.z = z;
-                        Cube.transform.localPosition = Pos;
-                        Instantiate(Cube,CubeSpawnField.transform);
-                    }                    
+                        if (CubePosArr[x][y][z] == true)
+                        {
+                            Vector3 Pos = Cube.transform.localPosition;
+                            Pos.x = x; Pos.y = y; Pos.z = z;
+                            Cube.transform.localPosition = Pos;
+                            Instantiate(Cube, CubeSpawnField.transform);
+                        }
+                        yield return new WaitForSeconds(0.1f);
+                    }
                 }
             }
+            StopCoroutine(m_crSpawn);
         }
 
-
+        m_crSpawn = StartCoroutine(SpawnCube());
 
     }
-    IEnumerator WaitFunc()
-    {
-         yield return new WaitForSeconds(1.0f);
-    }
+
 }
