@@ -3,29 +3,59 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 
 public class LevelMNG : MonoBehaviour
 {
     public GameObject g_CubePrefab;
+    public GameObject g_ButtonPrefab;
+    private TextMeshProUGUI m_AnswerText;
     private Coroutine m_crSpawn;
+    private Sprite[] m_ButtonSprites;
+    public string g_sAnswer;
+    private int m_CubeAmount = 12;
+
 
     // Start is called before the first frame update
     void Start()
     {
-        bool[][][] CubePos = SetCubePos(12);
-        SpawnCubes(CubePos);
+        g_sAnswer = "";
+        bool[][][] CubePosTemp = SetCubePos(12);
+        SpawnCubes(CubePosTemp);
+        InitButton();
+        GameObject AnserText = GameObject.Find("AnswerText");
+        if (AnserText == null)
+            Debug.Log("NoAnserText");
+
+        m_AnswerText = AnserText.transform.GetComponent<TextMeshProUGUI>();
+        if (m_AnswerText == null)
+            Debug.Log("NoTMP");
 
         Debug.Log("Done!");
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-
+        m_AnswerText.text = g_sAnswer;
     }
 
-    public bool[][][] SetCubePos(int CubeAmount)
+
+    public void CompareAnswer()
+    {
+        if (int.Parse(g_sAnswer) == m_CubeAmount)
+        {
+            Debug.Log("Correct");
+        }
+        else
+        {
+            Debug.Log("No");
+        }
+        g_sAnswer = "";
+    }
+
+    private bool[][][] SetCubePos(int CubeAmount)
     {
         if(CubeAmount > 48)
         {
@@ -80,7 +110,7 @@ public class LevelMNG : MonoBehaviour
 
         return CubePos;
     }
-    public void SpawnCubes(bool[][][] CubePosArr)
+    private void SpawnCubes(bool[][][] CubePosArr)
     {
         GameObject Cube = g_CubePrefab;
         GameObject CubeSpawnField = GameObject.Find("CubeSpawnField");
@@ -98,8 +128,8 @@ public class LevelMNG : MonoBehaviour
                             Pos.x = x; Pos.y = y; Pos.z = z;
                             Cube.transform.localPosition = Pos;
                             Instantiate(Cube, CubeSpawnField.transform);
+                            yield return new WaitForSeconds(0.1f);
                         }
-                        yield return new WaitForSeconds(0.1f);
                     }
                 }
             }
@@ -110,4 +140,35 @@ public class LevelMNG : MonoBehaviour
 
     }
 
+
+    private void InitButton()
+    {
+        m_ButtonSprites = new Sprite[12];
+        for (int i = 0; i < m_ButtonSprites.Length; i++)
+        {
+            Sprite tempSprite = Resources.Load<Sprite>("Image/" + i);
+            if (tempSprite != null)
+                m_ButtonSprites[i] = tempSprite;
+            else
+                Debug.Log("Sprite not Found");
+        }
+        Debug.Log("Sprite Init Done");
+        GameObject ButtonTemp = g_ButtonPrefab;
+        
+        for (int i = 1;i < m_ButtonSprites.Length-2;i++)
+        {
+            ButtonTemp.transform.GetComponent<SpriteRenderer>().sprite = m_ButtonSprites[i];
+            ButtonTemp.transform.GetComponent<NumButtonScript>().ButtonNum = i;
+            ButtonTemp.transform.position = new Vector3((-1.5f + (((i-1) % 3)*1.5f)), ((2.5f - ((i-1) / 3))*1.5f),0);
+
+            Instantiate(ButtonTemp, gameObject.transform);
+        }
+        for(int i = 10; i< m_ButtonSprites.Length; ++i)
+        {
+            ButtonTemp.transform.GetComponent<SpriteRenderer>().sprite = m_ButtonSprites[i];
+            ButtonTemp.transform.GetComponent<NumButtonScript>().ButtonNum = i;
+            ButtonTemp.transform.position = new Vector3(-2.0f + (4.0f* (i-10)), -0.75f, 0);
+            Instantiate(ButtonTemp, gameObject.transform);
+        }
+    }
 }

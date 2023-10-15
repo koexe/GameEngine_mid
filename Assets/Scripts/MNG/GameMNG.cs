@@ -49,5 +49,7 @@ public class GameMNG : MonoBehaviour
     {
         SceneManager.LoadScene(m_SceneDic[SceneNum]);
         Debug.Log("asdf");
+
+
     }
 }
