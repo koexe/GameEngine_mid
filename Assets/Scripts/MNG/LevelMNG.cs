@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 
@@ -10,51 +11,69 @@ public class LevelMNG : MonoBehaviour
 {
     public GameObject g_CubePrefab;
     public GameObject g_ButtonPrefab;
-    private TextMeshProUGUI m_AnswerText;
+    public TextMeshProUGUI m_AnswerText;
+    public TextMeshProUGUI m_LevelText;
+    public TextMeshProUGUI m_TimeText;
+    public TextMeshProUGUI m_ScoreText;
     private Coroutine m_crSpawn;
     private Sprite[] m_ButtonSprites;
-    public string g_sAnswer;
-    private int m_CubeAmount = 12;
+    public string g_sAnswer = "";
+    private int m_iCubeAmount;
+    private int m_iLevel = 0;
+    private int m_iTime = 0;
+    private int m_iScore = 0;
 
 
     // Start is called before the first frame update
     void Start()
     {
-        g_sAnswer = "";
-        bool[][][] CubePosTemp = SetCubePos(12);
-        SpawnCubes(CubePosTemp);
+        InitLevel(m_iLevel);
         InitButton();
-        GameObject AnserText = GameObject.Find("AnswerText");
-        if (AnserText == null)
-            Debug.Log("NoAnserText");
+        InitText();
+        
 
-        m_AnswerText = AnserText.transform.GetComponent<TextMeshProUGUI>();
-        if (m_AnswerText == null)
-            Debug.Log("NoTMP");
 
-        Debug.Log("Done!");
+        Debug.Log("Init Task Done!");
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
+        m_iTime++;
         m_AnswerText.text = g_sAnswer;
+        m_TimeText.text = "Time:" + m_iTime;
     }
 
 
     public void CompareAnswer()
     {
-        if (int.Parse(g_sAnswer) == m_CubeAmount)
+        if (int.Parse(g_sAnswer) == m_iCubeAmount)
         {
             Debug.Log("Correct");
+            if (m_iTime < 200)
+                m_iScore += 3000;
+            else if (m_iTime > 200 && m_iTime < 400)
+                m_iScore += 5000 - (m_iTime * 10);
+            else
+                m_iScore += 1000;
+            m_iLevel++;
+            m_LevelText.text = "Level:" + (m_iLevel + 1);
+            m_ScoreText.text = "Score:" + m_iScore;
+            InitLevel(m_iLevel);
+            if(m_iLevel == 11)
+            {
+                SceneManager.LoadScene("EndScene");
+            }
         }
         else
         {
+            if(m_iScore > 1000)
+                m_iScore -= 1000;
+            m_ScoreText.text = "Score:" + m_iScore;
             Debug.Log("No");
         }
         g_sAnswer = "";
     }
-
     private bool[][][] SetCubePos(int CubeAmount)
     {
         if(CubeAmount > 48)
@@ -139,8 +158,6 @@ public class LevelMNG : MonoBehaviour
         m_crSpawn = StartCoroutine(SpawnCube());
 
     }
-
-
     private void InitButton()
     {
         m_ButtonSprites = new Sprite[12];
@@ -170,5 +187,38 @@ public class LevelMNG : MonoBehaviour
             ButtonTemp.transform.position = new Vector3(-2.0f + (4.0f* (i-10)), -0.75f, 0);
             Instantiate(ButtonTemp, gameObject.transform);
         }
+        ButtonTemp.transform.GetComponent<SpriteRenderer>().sprite = m_ButtonSprites[0];
+        ButtonTemp.transform.GetComponent<NumButtonScript>().ButtonNum = 0;
+        ButtonTemp.transform.position = new Vector3(0 , -0.75f, 0);
+        Instantiate(ButtonTemp, gameObject.transform);
+
+    }
+    private void InitLevel(int Level)
+    {
+        m_iTime = 0;
+        GameObject[] CubeDestroy = GameObject.FindGameObjectsWithTag("Cube");
+        for (int i = 0; i < CubeDestroy.Length; i++)
+            Destroy(CubeDestroy[i]);
+
+        m_iCubeAmount = m_iLevel + UnityEngine.Random.Range(1, 5);
+        bool[][][] CubePos = SetCubePos(m_iCubeAmount);
+        SpawnCubes(CubePos);
+        
+    }
+    private void InitText()
+    {
+        GameObject AnserText = GameObject.Find("AnswerText");
+        GameObject LevelText = GameObject.Find("LevelText");
+        GameObject ScoreText = GameObject.Find("ScoreText");
+        GameObject TimeText = GameObject.Find("TimeText");
+
+        m_AnswerText = AnserText.transform.GetComponent<TextMeshProUGUI>();
+        m_LevelText = LevelText.transform.GetComponent<TextMeshProUGUI>();
+        m_ScoreText = ScoreText.transform.GetComponent<TextMeshProUGUI>();
+        m_TimeText = TimeText.transform.GetComponent<TextMeshProUGUI>();
+
+        m_LevelText.text = "Level:" + (m_iLevel + 1);
+        m_ScoreText.text = "Score:" + m_iScore;
+        m_TimeText.text = "Time:" + m_iTime;
     }
 }

@@ -12,11 +12,11 @@ public class NumButtonScript : MonoBehaviour
         LevelMNG levelMNG = gameObject.transform.parent.GetComponent<LevelMNG>();
         if (levelMNG == null)
             Debug.Log("GameMNG Not Found");
-        if (ButtonNum > 0 && ButtonNum < 10)
+        if (ButtonNum < 10)
         {
             levelMNG.g_sAnswer += ButtonNum;
         }
-        if(ButtonNum == 0)
+        if(ButtonNum == 11)
         {
             levelMNG.g_sAnswer = "";
         }
@@ -24,6 +24,6 @@ public class NumButtonScript : MonoBehaviour
         {
             levelMNG.CompareAnswer();
         }
-        Debug.Log(ButtonNum);
+        //Debug.Log(ButtonNum);
     }
 }
