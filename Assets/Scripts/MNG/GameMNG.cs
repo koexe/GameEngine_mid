@@ -8,6 +8,7 @@ public class GameMNG : MonoBehaviour
 {
     private static GameMNG _instance;
     private Dictionary<int,string> m_SceneDic;
+    public int g_iScore = 0;
 
 
     public static GameMNG Instance
@@ -48,8 +49,5 @@ public class GameMNG : MonoBehaviour
     public void ChangeScene(int SceneNum)
     {
         SceneManager.LoadScene(m_SceneDic[SceneNum]);
-        Debug.Log("asdf");
-
-
     }
 }

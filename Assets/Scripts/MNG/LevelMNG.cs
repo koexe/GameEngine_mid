@@ -24,6 +24,8 @@ public class LevelMNG : MonoBehaviour
     private int m_iScore = 0;
 
 
+    private bool m_GameState = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -39,16 +41,25 @@ public class LevelMNG : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        m_iTime++;
-        m_AnswerText.text = g_sAnswer;
-        m_TimeText.text = "Time:" + m_iTime;
+        if (m_GameState == true)
+        {
+            m_iTime++;
+            m_AnswerText.text = g_sAnswer;
+            m_TimeText.text = "Time:" + m_iTime;
+        }
     }
 
 
     public void CompareAnswer()
     {
+        Debug.Log(int.Parse(g_sAnswer));
         if (int.Parse(g_sAnswer) == m_iCubeAmount)
         {
+            if (m_iLevel == 10)
+            {
+                GameMNG.Instance.g_iScore = m_iScore;
+                SceneManager.LoadScene("EndScene");
+            }
             Debug.Log("Correct");
             if (m_iTime < 200)
                 m_iScore += 3000;
@@ -60,10 +71,6 @@ public class LevelMNG : MonoBehaviour
             m_LevelText.text = "Level:" + (m_iLevel + 1);
             m_ScoreText.text = "Score:" + m_iScore;
             InitLevel(m_iLevel);
-            if(m_iLevel == 11)
-            {
-                SceneManager.LoadScene("EndScene");
-            }
         }
         else
         {
@@ -96,21 +103,21 @@ public class LevelMNG : MonoBehaviour
         int CubeOtherFloor = CubeAmount / 3;
         int Cube1stFloor = CubeAmount - CubeOtherFloor;
 
-        Debug.Log(Cube1stFloor);
-        Debug.Log(CubeOtherFloor);
+        //Debug.Log(Cube1stFloor);
+        //Debug.Log(CubeOtherFloor);
 
         
         for (int i = 0; i < Cube1stFloor; i++)
         {
-            int x,y;
+            int x,z;
             while (true)
             {
                 x = UnityEngine.Random.Range(0, 4);
-                y = UnityEngine.Random.Range(0, 4);
-                if (CubePos[x][y][0] == false)
+                z = UnityEngine.Random.Range(0, 4);
+                if (CubePos[x][z][0] == false)
                     break;
             }
-            CubePos[x][y][0] = true;
+            CubePos[x][z][0] = true;
         }
         
         for (int i = 0; i < CubeOtherFloor; i++)
@@ -119,12 +126,12 @@ public class LevelMNG : MonoBehaviour
             while(true)
             {
                 x = UnityEngine.Random.Range(0, 4);
-                y = UnityEngine.Random.Range(0, 4);
-                z = UnityEngine.Random.Range(1, 4);
-                if(CubePos[x][y][z - 1] == true && CubePos[x][y][z] == false)
+                z = UnityEngine.Random.Range(0, 4);
+                y = UnityEngine.Random.Range(1, 4);
+                if(CubePos[x][z][y - 1] == true && CubePos[x][z][y] == false)
                     break;
             }
-            CubePos[x][y][z] = true;
+            CubePos[x][z][y] = true;
         }
 
         return CubePos;
@@ -133,6 +140,7 @@ public class LevelMNG : MonoBehaviour
     {
         GameObject Cube = g_CubePrefab;
         GameObject CubeSpawnField = GameObject.Find("CubeSpawnField");
+        //CubeScript cubeScript = g_CubePrefab.transform.GetComponent<CubeScript>();
         IEnumerator SpawnCube()
         {
             for (int z = 0; z < CubePosArr.Length; z++)
@@ -141,10 +149,11 @@ public class LevelMNG : MonoBehaviour
                 {
                     for (int x = 0; x < CubePosArr[y].Length; x++)
                     {
-                        if (CubePosArr[x][y][z] == true)
+                        if (CubePosArr[x][z][y] == true)
                         {
                             Vector3 Pos = Cube.transform.localPosition;
-                            Pos.x = x; Pos.y = y; Pos.z = z;
+                            //cubeScript.g_v3TargetPos = Pos;
+                            Pos.x = x; Pos.y = y + 1; Pos.z = z;
                             Cube.transform.localPosition = Pos;
                             Instantiate(Cube, CubeSpawnField.transform);
                             yield return new WaitForSeconds(0.1f);
@@ -152,11 +161,10 @@ public class LevelMNG : MonoBehaviour
                     }
                 }
             }
+            m_GameState = true;
             StopCoroutine(m_crSpawn);
         }
-
         m_crSpawn = StartCoroutine(SpawnCube());
-
     }
     private void InitButton()
     {
@@ -195,6 +203,7 @@ public class LevelMNG : MonoBehaviour
     }
     private void InitLevel(int Level)
     {
+        m_GameState = false;
         m_iTime = 0;
         GameObject[] CubeDestroy = GameObject.FindGameObjectsWithTag("Cube");
         for (int i = 0; i < CubeDestroy.Length; i++)
@@ -202,8 +211,7 @@ public class LevelMNG : MonoBehaviour
 
         m_iCubeAmount = m_iLevel + UnityEngine.Random.Range(1, 5);
         bool[][][] CubePos = SetCubePos(m_iCubeAmount);
-        SpawnCubes(CubePos);
-        
+        SpawnCubes(CubePos);        
     }
     private void InitText()
     {
