@@ -11,10 +11,12 @@ public class LevelMNG : MonoBehaviour
 {
     public GameObject g_CubePrefab;
     public GameObject g_ButtonPrefab;
+    public GameObject g_ExpainPrefab;
     public TextMeshProUGUI m_AnswerText;
     public TextMeshProUGUI m_LevelText;
     public TextMeshProUGUI m_TimeText;
     public TextMeshProUGUI m_ScoreText;
+    public Sprite[] g_AnswerSprites;
     private Coroutine m_crSpawn;
     private Sprite[] m_ButtonSprites;
     public string g_sAnswer = "";
@@ -32,9 +34,6 @@ public class LevelMNG : MonoBehaviour
         InitLevel(m_iLevel);
         InitButton();
         InitText();
-        
-
-
         Debug.Log("Init Task Done!");
     }
 
@@ -48,14 +47,12 @@ public class LevelMNG : MonoBehaviour
             m_TimeText.text = "Time:" + m_iTime;
         }
     }
-
-
     public void CompareAnswer()
     {
         Debug.Log(int.Parse(g_sAnswer));
         if (int.Parse(g_sAnswer) == m_iCubeAmount)
         {
-            if (m_iLevel == 10)
+            if (m_iLevel + 1 == 10)
             {
                 GameMNG.Instance.g_iScore = m_iScore;
                 SceneManager.LoadScene("EndScene");
@@ -70,16 +67,35 @@ public class LevelMNG : MonoBehaviour
             m_iLevel++;
             m_LevelText.text = "Level:" + (m_iLevel + 1);
             m_ScoreText.text = "Score:" + m_iScore;
-            InitLevel(m_iLevel);
+
+
+            ShowAnswerPopup(true);
+            //InitLevel(m_iLevel);
         }
         else
         {
             if(m_iScore > 1000)
                 m_iScore -= 1000;
             m_ScoreText.text = "Score:" + m_iScore;
+            ShowAnswerPopup(false);
             Debug.Log("No");
         }
         g_sAnswer = "";
+    }
+    public void ShowExplain()
+    {
+        GameObject ExplainTemp = g_ExpainPrefab;
+        GameObject Temp = GameObject.FindGameObjectWithTag("UI");
+        ExplainTemp.transform.position = new Vector3(-4.0f, 1.0f, -7.5f);
+        ExplainTemp.transform.GetComponent<IdontWantAddScript>().UI = Temp;
+
+        Instantiate(ExplainTemp,gameObject.transform);
+        m_GameState = false;
+        Temp.SetActive(false);
+    }
+    public void setGameState()
+    {
+        m_GameState = true;
     }
     private bool[][][] SetCubePos(int CubeAmount)
     {
@@ -143,17 +159,17 @@ public class LevelMNG : MonoBehaviour
         //CubeScript cubeScript = g_CubePrefab.transform.GetComponent<CubeScript>();
         IEnumerator SpawnCube()
         {
-            for (int z = 0; z < CubePosArr.Length; z++)
+            for (int y = 0; y < CubePosArr.Length; y++)
             {
-                for (int y = 0; y < CubePosArr[z].Length; y++)
+                for (int z = 0; z < CubePosArr[y].Length; z++)
                 {
-                    for (int x = 0; x < CubePosArr[y].Length; x++)
+                    for (int x = 0; x < CubePosArr[z].Length; x++)
                     {
                         if (CubePosArr[x][z][y] == true)
                         {
                             Vector3 Pos = Cube.transform.localPosition;
                             //cubeScript.g_v3TargetPos = Pos;
-                            Pos.x = x; Pos.y = y + 1; Pos.z = z;
+                            Pos.x = x; Pos.y = y; Pos.z = z;
                             Cube.transform.localPosition = Pos;
                             Instantiate(Cube, CubeSpawnField.transform);
                             yield return new WaitForSeconds(0.1f);
@@ -168,6 +184,7 @@ public class LevelMNG : MonoBehaviour
     }
     private void InitButton()
     {
+        //리소스 폴더에서 sprite load
         m_ButtonSprites = new Sprite[12];
         for (int i = 0; i < m_ButtonSprites.Length; i++)
         {
@@ -178,8 +195,10 @@ public class LevelMNG : MonoBehaviour
                 Debug.Log("Sprite not Found");
         }
         Debug.Log("Sprite Init Done");
+
+        //0 ~ submit, Clear Button GameObject Instantiate
         GameObject ButtonTemp = g_ButtonPrefab;
-        
+        ButtonTemp.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
         for (int i = 1;i < m_ButtonSprites.Length-2;i++)
         {
             ButtonTemp.transform.GetComponent<SpriteRenderer>().sprite = m_ButtonSprites[i];
@@ -203,8 +222,8 @@ public class LevelMNG : MonoBehaviour
     }
     private void InitLevel(int Level)
     {
-        m_GameState = false;
         m_iTime = 0;
+        m_GameState = false;
         GameObject[] CubeDestroy = GameObject.FindGameObjectsWithTag("Cube");
         for (int i = 0; i < CubeDestroy.Length; i++)
             Destroy(CubeDestroy[i]);
@@ -228,5 +247,29 @@ public class LevelMNG : MonoBehaviour
         m_LevelText.text = "Level:" + (m_iLevel + 1);
         m_ScoreText.text = "Score:" + m_iScore;
         m_TimeText.text = "Time:" + m_iTime;
+    }
+    private void ShowAnswerPopup(bool isAnswer)
+    {
+        Coroutine InitCoroutine = null;
+
+        IEnumerator ShowPopup()
+        {
+            GameObject PopupPrefab = g_ButtonPrefab;
+
+            PopupPrefab.transform.GetComponent<SpriteRenderer>().sprite = isAnswer ? g_AnswerSprites[0] : g_AnswerSprites[1];
+            PopupPrefab.transform.GetComponent<NumButtonScript>().ButtonNum = 13;
+            PopupPrefab.transform.position = new Vector3(2.0f, 4.5f, 10.0f);
+            PopupPrefab.transform.tag = "PopUp";
+            PopupPrefab.transform.rotation = Quaternion.Euler(36.0f, 136.0f, 0.0f);
+            
+            Instantiate(PopupPrefab);
+
+            yield return new WaitForSeconds(1.0f);
+            if(isAnswer)
+                InitLevel(m_iLevel);
+
+            StopCoroutine(InitCoroutine);
+        }
+        InitCoroutine = StartCoroutine(ShowPopup());
     }
 }

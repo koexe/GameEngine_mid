@@ -6,6 +6,15 @@ using UnityEngine;
 public class NumButtonScript : MonoBehaviour
 {
     public int ButtonNum;
+    private Coroutine m_crDestroyFunc;
+
+    private void Start()
+    {
+        if(ButtonNum == 13)
+        {
+            m_crDestroyFunc = StartCoroutine(DestroyFunc());
+        }
+    }
 
     private void OnMouseDown()
     {
@@ -16,14 +25,26 @@ public class NumButtonScript : MonoBehaviour
         {
             levelMNG.g_sAnswer += ButtonNum;
         }
-        if(ButtonNum == 11)
+        else if(ButtonNum == 11)
         {
             levelMNG.g_sAnswer = "";
         }
-        if (ButtonNum == 10)
+        else if (ButtonNum == 10)
         {
             levelMNG.CompareAnswer();
         }
+        else
+        {
+            Debug.Log("NouButton");
+        }
         //Debug.Log(ButtonNum);
+    }
+
+
+    private IEnumerator DestroyFunc()
+    {
+        yield return new WaitForSeconds(1.0f);
+        Destroy(gameObject);
+        StopCoroutine(m_crDestroyFunc);
     }
 }
