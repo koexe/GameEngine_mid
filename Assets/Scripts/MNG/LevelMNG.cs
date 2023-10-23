@@ -16,6 +16,7 @@ public class LevelMNG : MonoBehaviour
     public TextMeshProUGUI m_LevelText;
     public TextMeshProUGUI m_TimeText;
     public TextMeshProUGUI m_ScoreText;
+    public TextMeshProUGUI m_HelpText;
     public Sprite[] g_AnswerSprites;
     private Coroutine m_crSpawn;
     private Sprite[] m_ButtonSprites;
@@ -24,6 +25,7 @@ public class LevelMNG : MonoBehaviour
     private int m_iLevel = 0;
     private int m_iTime = 0;
     private int m_iScore = 0;
+    private bool[][][] CurrentCubePosArr;
 
 
     private bool m_GameState = false;
@@ -58,18 +60,21 @@ public class LevelMNG : MonoBehaviour
                 SceneManager.LoadScene("EndScene");
             }
             Debug.Log("Correct");
+            int plusScore;
             if (m_iTime < 200)
-                m_iScore += 3000;
+                plusScore = 3000;
             else if (m_iTime > 200 && m_iTime < 400)
-                m_iScore += 5000 - (m_iTime * 10);
+                plusScore = 5000 - (m_iTime * 10);
             else
-                m_iScore += 1000;
+                plusScore = 1000;
+            m_iScore += plusScore;
+
             m_iLevel++;
             m_LevelText.text = "Level:" + (m_iLevel + 1);
             m_ScoreText.text = "Score:" + m_iScore;
 
 
-            ShowAnswerPopup(true);
+            ShowAnswerPopup(true, plusScore);
             //InitLevel(m_iLevel);
         }
         else
@@ -77,7 +82,7 @@ public class LevelMNG : MonoBehaviour
             if(m_iScore > 1000)
                 m_iScore -= 1000;
             m_ScoreText.text = "Score:" + m_iScore;
-            ShowAnswerPopup(false);
+            ShowAnswerPopup(false,-1000);
             Debug.Log("No");
         }
         g_sAnswer = "";
@@ -92,6 +97,23 @@ public class LevelMNG : MonoBehaviour
         Instantiate(ExplainTemp,gameObject.transform);
         m_GameState = false;
         Temp.SetActive(false);
+    }
+    public void ShowHint()
+    {
+        bool[][][] CubePos = CurrentCubePosArr;
+        int hidden = 0;
+        for(int y = 0; y < CubePos.Length-1; y++)
+            for(int z = 0; z < CubePos.Length-1; z++)
+                for (int x = 0; x < CubePos.Length-1; x++)
+                {
+                    if(CubePos[x][z][y] == true)
+                        if (CubePos[x + 1][z + 1][y + 1] == true)
+                            hidden++;
+                }
+
+        TextMeshProUGUI HelpText =m_HelpText.GetComponent<TextMeshProUGUI>();
+
+        HelpText.text = "숨겨진 큐브는 " + hidden + "개 입니다.";
     }
     public void setGameState()
     {
@@ -157,6 +179,7 @@ public class LevelMNG : MonoBehaviour
         GameObject Cube = g_CubePrefab;
         GameObject CubeSpawnField = GameObject.Find("CubeSpawnField");
         //CubeScript cubeScript = g_CubePrefab.transform.GetComponent<CubeScript>();
+        //0.1초를 기다리며 큐브를 생성하는 코루틴
         IEnumerator SpawnCube()
         {
             for (int y = 0; y < CubePosArr.Length; y++)
@@ -169,7 +192,7 @@ public class LevelMNG : MonoBehaviour
                         {
                             Vector3 Pos = Cube.transform.localPosition;
                             //cubeScript.g_v3TargetPos = Pos;
-                            Pos.x = x; Pos.y = y; Pos.z = z;
+                            Pos.x = x; Pos.y = y + 1; Pos.z = z;
                             Cube.transform.localPosition = Pos;
                             Instantiate(Cube, CubeSpawnField.transform);
                             yield return new WaitForSeconds(0.1f);
@@ -199,6 +222,8 @@ public class LevelMNG : MonoBehaviour
         //0 ~ submit, Clear Button GameObject Instantiate
         GameObject ButtonTemp = g_ButtonPrefab;
         ButtonTemp.transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
+        ButtonTemp.transform.GetChild(0).GetComponent<TextMeshPro>().text = "";
+
         for (int i = 1;i < m_ButtonSprites.Length-2;i++)
         {
             ButtonTemp.transform.GetComponent<SpriteRenderer>().sprite = m_ButtonSprites[i];
@@ -222,18 +247,22 @@ public class LevelMNG : MonoBehaviour
     }
     private void InitLevel(int Level)
     {
+        //Level의 큐브를 삭제하고 level에 맞는 양의 큐브를 spawn하는 함수
         m_iTime = 0;
         m_GameState = false;
         GameObject[] CubeDestroy = GameObject.FindGameObjectsWithTag("Cube");
         for (int i = 0; i < CubeDestroy.Length; i++)
             Destroy(CubeDestroy[i]);
 
-        m_iCubeAmount = m_iLevel + UnityEngine.Random.Range(1, 5);
+        m_iCubeAmount = m_iLevel + UnityEngine.Random.Range(3, 6);
         bool[][][] CubePos = SetCubePos(m_iCubeAmount);
+        CurrentCubePosArr = CubePos;
+
         SpawnCubes(CubePos);        
     }
     private void InitText()
     {
+        //게임 시작 시 정보 텍스트들을 초기화하는 함수
         GameObject AnserText = GameObject.Find("AnswerText");
         GameObject LevelText = GameObject.Find("LevelText");
         GameObject ScoreText = GameObject.Find("ScoreText");
@@ -243,13 +272,16 @@ public class LevelMNG : MonoBehaviour
         m_LevelText = LevelText.transform.GetComponent<TextMeshProUGUI>();
         m_ScoreText = ScoreText.transform.GetComponent<TextMeshProUGUI>();
         m_TimeText = TimeText.transform.GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI HelpText = m_HelpText.GetComponent<TextMeshProUGUI>();
 
         m_LevelText.text = "Level:" + (m_iLevel + 1);
         m_ScoreText.text = "Score:" + m_iScore;
         m_TimeText.text = "Time:" + m_iTime;
+        HelpText.text = "";
     }
-    private void ShowAnswerPopup(bool isAnswer)
+    private void ShowAnswerPopup(bool isAnswer, int Score)
     {
+        //정답/오답의 정보와 점수를 표시하는 코루틴
         Coroutine InitCoroutine = null;
 
         IEnumerator ShowPopup()
@@ -261,6 +293,7 @@ public class LevelMNG : MonoBehaviour
             PopupPrefab.transform.position = new Vector3(2.0f, 4.5f, 10.0f);
             PopupPrefab.transform.tag = "PopUp";
             PopupPrefab.transform.rotation = Quaternion.Euler(36.0f, 136.0f, 0.0f);
+            PopupPrefab.transform.GetChild(0).GetComponent<TextMeshPro>().text = Score.ToString();
             
             Instantiate(PopupPrefab);
 
