@@ -10,22 +10,20 @@ public class StartSceneMNG : MonoBehaviour
     void Start()
     {
         string ScoreText = "";
-        for(int i = 0; i< GameMNG.Instance.ScoreList.Count; i++)
+        if (GameMNG.Instance.ScoreList.Count > 0)
         {
-            string tempString = "";
-            tempString += GameMNG.Instance.ScoreList[i].g_sName;
-            tempString += " ";
-            tempString += GameMNG.Instance.ScoreList[i].g_iScoreNum;
-            tempString += "\n";
-            ScoreText += tempString;
+            Debug.Log(GameMNG.Instance.ScoreList.Count);
+            for (int i = 0; i < 10; i++)
+            {
+                string tempString = "";
+                tempString += GameMNG.Instance.ScoreList[i].g_sName;
+                tempString += " ";
+                tempString += GameMNG.Instance.ScoreList[i].g_iScoreNum;
+                tempString += "\n";
+                ScoreText += tempString;
+            }
         }
 
         HighScoreText.text = ScoreText;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

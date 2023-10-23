@@ -10,6 +10,7 @@ public class EndSceneMNG : MonoBehaviour
 {
     public TextMeshProUGUI ResultScoreText;
     public string g_sInputName;
+    public int g_iSceneNum = 1;
     
     // Start is called before the first frame update
     void Start()
@@ -21,11 +22,15 @@ public class EndSceneMNG : MonoBehaviour
 
     public void WriteCSV(string name)
     {
-        Debug.Log(name);
-        string tempString = name+","+GameMNG.Instance.g_iScore + "\n";
+        GameMNG.Instance.SaveCsvData_mobile(name);
 
-        File.AppendAllText("Assets/Resources/CSV/Score.csv", tempString);
+        GameMNG.Instance.InitCsvData_mobile(GameMNG.Instance.m_sScoreFilePath);
+        GameMNG.Instance.ChangeScene(g_iSceneNum);
 
-        
+
+    }
+    public void ShowKeyBoard()
+    {
+        TouchScreenKeyboard keyboard = TouchScreenKeyboard.Open("");
     }
 }

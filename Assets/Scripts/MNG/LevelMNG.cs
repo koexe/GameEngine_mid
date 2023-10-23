@@ -70,8 +70,6 @@ public class LevelMNG : MonoBehaviour
                 plusScore = 1000;
             m_iScore += plusScore;
 
-            m_iLevel++;
-            m_LevelText.text = "Level:" + (m_iLevel + 1);
             m_ScoreText.text = "Score:" + m_iScore;
 
 
@@ -264,7 +262,7 @@ public class LevelMNG : MonoBehaviour
     {
         //Level의 큐브를 삭제하고 level에 맞는 양의 큐브를 spawn하는 함수
         m_iTime = 0;
-        m_GameState = false;
+        
         GameObject[] CubeDestroy = GameObject.FindGameObjectsWithTag("Cube");
         for (int i = 0; i < CubeDestroy.Length; i++)
             Destroy(CubeDestroy[i]);
@@ -301,6 +299,7 @@ public class LevelMNG : MonoBehaviour
 
         IEnumerator ShowPopup()
         {
+            m_GameState = false;
             GameObject PopupPrefab = g_ButtonPrefab;
 
             PopupPrefab.transform.GetComponent<SpriteRenderer>().sprite = isAnswer ? g_AnswerSprites[0] : g_AnswerSprites[1];
@@ -314,12 +313,17 @@ public class LevelMNG : MonoBehaviour
 
             yield return new WaitForSeconds(1.0f);
 
-            if(isAnswer)
+            if (isAnswer)
+            {
                 g_Floor.SetActive(false);
                 yield return new WaitForSeconds(2.0f);
                 g_Floor.SetActive(true);
+                m_iLevel++;
+                m_LevelText.text = "Level:" + (m_iLevel + 1);
                 InitLevel(m_iLevel);
-
+            }
+            else
+                m_GameState = true;
             StopCoroutine(InitCoroutine);
         }
         InitCoroutine = StartCoroutine(ShowPopup());
