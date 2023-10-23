@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
-
+using System.IO;
 
 public class GameMNG : MonoBehaviour
 {
@@ -32,6 +32,7 @@ public class GameMNG : MonoBehaviour
 
     private void Awake()
     {
+        ScoreCSV = Resources.Load<TextAsset>("CSV/Score");
         if (_instance == null)
         {
             _instance = this;

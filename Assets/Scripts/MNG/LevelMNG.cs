@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
-
+using UnityEngine.UI;
 
 public class LevelMNG : MonoBehaviour
 {
     public GameObject g_CubePrefab;
     public GameObject g_ButtonPrefab;
     public GameObject g_ExpainPrefab;
+    public GameObject g_Floor;
     public TextMeshProUGUI m_AnswerText;
     public TextMeshProUGUI m_LevelText;
     public TextMeshProUGUI m_TimeText;
@@ -100,20 +101,34 @@ public class LevelMNG : MonoBehaviour
     }
     public void ShowHint()
     {
-        bool[][][] CubePos = CurrentCubePosArr;
-        int hidden = 0;
-        for(int y = 0; y < CubePos.Length-1; y++)
-            for(int z = 0; z < CubePos.Length-1; z++)
-                for (int x = 0; x < CubePos.Length-1; x++)
-                {
-                    if(CubePos[x][z][y] == true)
-                        if (CubePos[x + 1][z + 1][y + 1] == true)
-                            hidden++;
-                }
+        if (m_iScore > GameMNG.Instance.ScoreList[0].g_iScoreNum)
+        {
+            Debug.Log("점수가 너무 높아용");
+            Sprite tempSprite = Resources.Load<Sprite>("Image/CantShowHint");
+            Image HelpImg = m_HelpText.transform.GetChild(0).GetComponent<Image>();
 
-        TextMeshProUGUI HelpText =m_HelpText.GetComponent<TextMeshProUGUI>();
+            Color tempColor = HelpImg.color;
+            tempColor.a = 1f;
+            HelpImg.color = tempColor;
+            HelpImg.sprite = tempSprite;
+        }
+        else
+        {
+            bool[][][] CubePos = CurrentCubePosArr;
+            int hidden = 0;
+            for (int y = 0; y < CubePos.Length - 1; y++)
+                for (int z = 0; z < CubePos.Length - 1; z++)
+                    for (int x = 0; x < CubePos.Length - 1; x++)
+                    {
+                        if (CubePos[x][z][y] == true)
+                            if (CubePos[x + 1][z + 1][y + 1] == true)
+                                hidden++;
+                    }
 
-        HelpText.text = "숨겨진 큐브는 " + hidden + "개 입니다.";
+            TextMeshProUGUI HelpText = m_HelpText.GetComponent<TextMeshProUGUI>();
+
+            HelpText.text = "숨겨진 큐브는 " + hidden + "개 입니다.";
+        }
     }
     public void setGameState()
     {
@@ -298,7 +313,11 @@ public class LevelMNG : MonoBehaviour
             Instantiate(PopupPrefab);
 
             yield return new WaitForSeconds(1.0f);
+
             if(isAnswer)
+                g_Floor.SetActive(false);
+                yield return new WaitForSeconds(2.0f);
+                g_Floor.SetActive(true);
                 InitLevel(m_iLevel);
 
             StopCoroutine(InitCoroutine);
