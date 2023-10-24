@@ -62,11 +62,6 @@ public class GameMNG : MonoBehaviour
         SceneManager.LoadScene(m_SceneDic[SceneNum]);
     }
 
-    public void SaveCSV(Score score)
-    {
-
-    }
-
     private void InitCsvData(TextAsset ScoreCSV)
     {
         ScoreList = new List<Score>();

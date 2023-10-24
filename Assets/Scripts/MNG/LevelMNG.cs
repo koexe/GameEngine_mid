@@ -19,14 +19,17 @@ public class LevelMNG : MonoBehaviour
     public TextMeshProUGUI m_ScoreText;
     public TextMeshProUGUI m_HelpText;
     public Sprite[] g_AnswerSprites;
-    private Coroutine m_crSpawn;
     private Sprite[] m_ButtonSprites;
+    private Coroutine m_crSpawn;
+    private AudioClip m_CorrectAudio;
+    private AudioClip m_NoAudio;
     public string g_sAnswer = "";
     private int m_iCubeAmount;
     private int m_iLevel = 0;
     private int m_iTime = 0;
     private int m_iScore = 0;
     private bool[][][] CurrentCubePosArr;
+    private AudioClip m_AudioClip;
 
 
     private bool m_GameState = false;
@@ -34,6 +37,10 @@ public class LevelMNG : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        m_AudioClip = Resources.Load<AudioClip>("Sound/Click");
+        m_CorrectAudio = Resources.Load<AudioClip>("Sound/Correct");
+        m_NoAudio = Resources.Load<AudioClip>("Sound/No");
+
         InitLevel(m_iLevel);
         InitButton();
         InitText();
@@ -55,19 +62,19 @@ public class LevelMNG : MonoBehaviour
         Debug.Log(int.Parse(g_sAnswer));
         if (int.Parse(g_sAnswer) == m_iCubeAmount)
         {
+            SoundMNG.Instance.PlaySound(m_CorrectAudio, 1);
             if (m_iLevel + 1 == 10)
             {
                 GameMNG.Instance.g_iScore = m_iScore;
                 SceneManager.LoadScene("EndScene");
             }
             Debug.Log("Correct");
-            int plusScore;
+            int plusScore = 1000;
             if (m_iTime < 200)
-                plusScore = 3000;
+            { plusScore = 3000; }
             else if (m_iTime > 200 && m_iTime < 400)
-                plusScore = 5000 - (m_iTime * 10);
-            else
-                plusScore = 1000;
+            { plusScore = 5000 - (m_iTime * 10); }
+
             m_iScore += plusScore;
 
             m_ScoreText.text = "Score:" + m_iScore;
@@ -78,6 +85,7 @@ public class LevelMNG : MonoBehaviour
         }
         else
         {
+            SoundMNG.Instance.PlaySound(m_NoAudio, 1);
             if(m_iScore > 1000)
                 m_iScore -= 1000;
             m_ScoreText.text = "Score:" + m_iScore;
@@ -88,6 +96,7 @@ public class LevelMNG : MonoBehaviour
     }
     public void ShowExplain()
     {
+        SoundMNG.Instance.PlaySound(m_AudioClip,1);
         GameObject ExplainTemp = g_ExpainPrefab;
         GameObject Temp = GameObject.FindGameObjectWithTag("UI");
         ExplainTemp.transform.position = new Vector3(-4.0f, 1.0f, -7.5f);
@@ -99,6 +108,7 @@ public class LevelMNG : MonoBehaviour
     }
     public void ShowHint()
     {
+        SoundMNG.Instance.PlaySound(m_AudioClip,1);
         if (m_iScore > GameMNG.Instance.ScoreList[0].g_iScoreNum)
         {
             Debug.Log("점수가 너무 높아용");
@@ -301,13 +311,16 @@ public class LevelMNG : MonoBehaviour
         {
             m_GameState = false;
             GameObject PopupPrefab = g_ButtonPrefab;
+            string ScoreTextTemp = Score.ToString();
+            Debug.Log(ScoreTextTemp);
 
+
+            PopupPrefab.transform.GetChild(0).GetComponent<TextMeshPro>().text = ScoreTextTemp;
             PopupPrefab.transform.GetComponent<SpriteRenderer>().sprite = isAnswer ? g_AnswerSprites[0] : g_AnswerSprites[1];
             PopupPrefab.transform.GetComponent<NumButtonScript>().ButtonNum = 13;
             PopupPrefab.transform.position = new Vector3(2.0f, 4.5f, 10.0f);
             PopupPrefab.transform.tag = "PopUp";
             PopupPrefab.transform.rotation = Quaternion.Euler(36.0f, 136.0f, 0.0f);
-            PopupPrefab.transform.GetChild(0).GetComponent<TextMeshPro>().text = Score.ToString();
             
             Instantiate(PopupPrefab);
 

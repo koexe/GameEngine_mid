@@ -10,10 +10,10 @@ public class StartSceneMNG : MonoBehaviour
     void Start()
     {
         string ScoreText = "";
-        if (GameMNG.Instance.ScoreList.Count > 0)
+        if (GameMNG.Instance.ScoreList.Count - 1 > 0)
         {
             Debug.Log(GameMNG.Instance.ScoreList.Count);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < GameMNG.Instance.ScoreList.Count; i++)
             {
                 string tempString = "";
                 tempString += GameMNG.Instance.ScoreList[i].g_sName;
